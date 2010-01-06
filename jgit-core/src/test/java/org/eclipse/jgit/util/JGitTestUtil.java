@@ -37,9 +37,17 @@
 
 package org.eclipse.jgit.util;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.UUID;
 
 public abstract class JGitTestUtil {
 	public static final String CLASSPATH_TO_RESOURCES = "org/eclipse/jgit/test/resources/";
@@ -60,12 +68,59 @@ public abstract class JGitTestUtil {
 		}
 		try {
 			return new File(url.toURI());
-		} catch(URISyntaxException e) {
+		} catch (URISyntaxException e) {
 			return new File(url.getPath());
 		}
 	}
 
+	public static void copyFile(final File fromFile, final File toFile)
+			throws IOException {
+		InputStream in = new FileInputStream(fromFile);
+		OutputStream out = new FileOutputStream(toFile);
+
+		byte[] buf = new byte[1024];
+		int len;
+		while ((len = in.read(buf)) > 0) {
+			out.write(buf, 0, len);
+		}
+		in.close();
+		out.close();
+	}
+
+	public static String readFileAsString(final File file)
+			throws java.io.IOException {
+		StringBuilder fileData = new StringBuilder(1000);
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		char[] buf = new char[1024];
+		int numRead = 0;
+		while ((numRead = reader.read(buf)) != -1) {
+			String readData = String.valueOf(buf, 0, numRead);
+			fileData.append(readData);
+			buf = new char[1024];
+		}
+		reader.close();
+		return fileData.toString();
+	}
+
 	private static ClassLoader cl() {
 		return JGitTestUtil.class.getClassLoader();
+	}
+
+	public static boolean deleteDir(File dir) {
+	    if (dir.isDirectory()) {
+	        String[] children = dir.list();
+	        for (int i=0; i<children.length; i++) {
+	            boolean success = deleteDir(new File(dir, children[i]));
+	            if (!success) {
+	                return false;
+	            }
+	        }
+	    }
+	    // The directory is now empty so delete it
+	    return dir.delete();
+	}
+
+	public static File generateTempDirectoryFileObject() {
+		return new File(new File(System.getProperty("java.io.tmpdir")), UUID.randomUUID().toString());
 	}
 }

@@ -62,6 +62,7 @@ import org.eclipse.jgit.lib.PackLock;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RefUpdate;
+import org.eclipse.jgit.lib.RefWriter;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.Config.SectionParser;
 import org.eclipse.jgit.revwalk.ObjectWalk;
@@ -521,6 +522,26 @@ public class ReceivePack {
 			}
 
 			postReceive.onPostReceive(this, filterCommands(Result.OK));
+			updateObjectInfoCache();
+			updateInfoRefsCache();
+		}
+	}
+
+	private void updateInfoRefsCache() {
+		try{
+			getRepository().getInfoDatabase().updateInfoCache(getRepository().getAllRefs().values());
+		}
+		catch (IOException e){
+			sendMessage("error updating info/refs: " + e.getMessage());
+		}
+	}
+
+	private void updateObjectInfoCache() {
+		try{
+			getRepository().getObjectDatabase().updateInfoCache();
+		}
+		catch (IOException e){
+			sendMessage("error updating server info: " + e.getMessage());
 		}
 	}
 

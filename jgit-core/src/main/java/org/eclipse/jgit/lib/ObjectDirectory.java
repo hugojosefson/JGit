@@ -508,4 +508,15 @@ public class ObjectDirectory extends ObjectDatabase {
 			return true;
 		}
 	}
+
+	@Override
+	public List<PackFile> listLocalPacks() {
+		tryAgain1();
+		return new ArrayList<PackFile>(Arrays.asList(packList.get().packs));
+	}
+
+	@Override
+	public void updateInfoCache() throws IOException {
+		new UpdateDirectoryBasedPacksInfoCache(this.listLocalPacks(), new File(this.getDirectory(), Constants.CACHED_PACKS_FILE)).execute();
+	}
 }
